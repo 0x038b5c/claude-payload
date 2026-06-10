@@ -53,6 +53,12 @@ def main():
         "have been set."
     )
 
+    # install bash_profile
+    shutil.copy(
+        "/opt/payload/bash_profile.sh",
+        "/opt/bash_profile",
+    )
+
     # install bash wrapper
     Path("/bin/sh").unlink()
     shutil.copy(
