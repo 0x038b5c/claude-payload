@@ -4,8 +4,8 @@ import json
 import shutil
 import subprocess
 
-def run(cmd, **kwargs):
-    return subprocess.run(
+def run(cmd, successcode=0, **kwargs):
+    result = subprocess.run(
         cmd,
         shell=True,
         check=True,
@@ -13,6 +13,17 @@ def run(cmd, **kwargs):
         capture_output=True,
         **kwargs
     )
+
+    success = result.returncode == successcode
+
+    if not success:
+        print("ERROR Running:", cmd)
+        print("stderr:")
+        print(result.stderr)
+        print("stdout:")
+        print(result.stdout)
+
+    return result, success
 
 def main():
     print("Provisioning Claude's environment")
