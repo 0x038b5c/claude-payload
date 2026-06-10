@@ -71,7 +71,7 @@ Top level description of the task
 
 The content of the state repo (and when in a project, the project's claude context) is to be updated before beginning a task, this way it may be recovered if interrupted.
 Before ending your response, always consider if the state or project should be updated again.
-Commit and push these changes.
+Always commit and push changes to both the state repository and projects immediately.
 
 Files you should be frequently updating to keep track of state:
 - /opt/state/state.json
