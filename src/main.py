@@ -78,6 +78,9 @@ def main():
     run("git clone https://github.com/0x038b5c/claude-state /opt/state --depth 1")
     print("Your state repository is stored at /opt/state")
 
+    # tell claude its github name
+    print("Your GitHub account username is: 0x038b5c")
+
     # inject static context
     print("Static context:")
     print(open("/opt/payload/context.md").read())
