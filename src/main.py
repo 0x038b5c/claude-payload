@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import json
 import shutil
 import subprocess
 
@@ -14,6 +15,8 @@ def run(cmd, **kwargs):
     )
 
 def main():
+    print("Provisioning Claude's environment")
+
     # install binaries
     for path in Path("/opt/payload/bin").iterdir():
         if not path.is_file():
@@ -59,6 +62,34 @@ def main():
         "/opt/payload/shell_wrapper.sh",
         "/bin/sh",
     )
+
+    # clone state
+    run("git clone https://github.com/0x038b5c/claude-state /opt/state --depth 1")
+    print("Your state repository is stored at /opt/state")
+
+    # inject static context
+    print("Static context:")
+    print(open("/opt/payload/context.md").read())
+    print()
+
+    print("Dynamic context:")
+
+    # inject active task context
+    if (
+        (state_file := Path("/opt/state/state.json")).exists()
+        and (state := json.loads(state_file.read_text())).get("active")
+    ):
+        if (project := state.get("project")) is not None:
+            print("The previously active task was using a project")
+            print("Project name:", project["name"])
+            print("Project repository:", project["repo"])
+            print("Project handoff file:", f"/opt/state/{project["handoff"]}")
+            print()
+
+        print("Previously active task context (active.md):")
+        print(open("/opt/state/active.md").read())
+    else:
+        print("No active task")
 
 if __name__ == "__main__":
     main()
