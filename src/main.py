@@ -28,14 +28,8 @@ def main():
     # clone secrets
     run("git clone https://github.com/0x038b5c/claude-secrets /opt/secrets --depth 1")
 
-    # decrypt and install github token
-    gh_pat = run("rage -d -i /opt/age.key /opt/secrets/github-token.age").stdout
-    with open("/opt/secrets/github-token", "w") as token:
-        token.write(gh_pat)
-
-    # install git-credentials
-    with open("/root/.git-credentials", "w") as git_creds:
-        git_creds.write(f"https://0x038b5c:{gh_pat}@github.com")
+    # decrypt github token
+    run("rage -d -i /opt/age.key /opt/secrets/github-token.age -o /opt/secrets/github-token")
 
     # decrypt git signing key
     run("rage -d -i /opt/age.key /opt/secrets/signing-key.age -o /opt/secrets/signing-key")
