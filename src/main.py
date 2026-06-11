@@ -31,6 +31,7 @@ def main():
     # install packages
     packages = ["gh", "rage-encryption", "openssh-client"]
     run(f"apt-get install -y {' '.join(packages)}")
+    print("Installing packages:", ", ".join(packages))
 
     # install tool
     shutil.copy2("/opt/payload/bin/tool", "/usr/local/bin/tool")
