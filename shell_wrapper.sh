@@ -1,4 +1,9 @@
 #! /bin/bash
 source /opt/bash_profile
-shift
-eval "$@"
+if [[ -f "$1" ]]; then
+  script="$1"; shift
+  bash "$script" "$@"
+else
+  shift
+  eval "$@"
+fi
