@@ -47,6 +47,7 @@ def main():
 
     # decrypt git signing key
     run("rage -d -i /opt/age.key /opt/secrets/signing-key.age -o /opt/secrets/signing-key")
+    Path("/opt/secrets/signing-key").chmod(0o600)
 
     # configure git
     run("git config --global user.name Claude")
