@@ -32,6 +32,10 @@ def main():
     packages = ["gh", "rage-encryption", "openssh-client"]
     run(f"apt-get install -y {' '.join(packages)}")
 
+    # install tool
+    shutil.copy2("/opt/payload/bin/tool", "/usr/local/bin/tool")
+    print("Installing binary: tool")
+
     # clone secrets
     run("git clone https://github.com/0x038b5c/claude-secrets /opt/secrets --depth 1")
 
