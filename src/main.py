@@ -8,7 +8,6 @@ def run(cmd, successcode=0, **kwargs):
     result = subprocess.run(
         cmd,
         shell=True,
-        check=True,
         text=True,
         capture_output=True,
         **kwargs
@@ -29,6 +28,7 @@ def main():
     print("Provisioning Claude's environment")
 
     # install packages
+    run("apt-get update || true")
     packages = ["gh", "age", "openssh-client"]
     run(f"apt-get install -y {' '.join(packages)}")
     print("Installing packages:", ", ".join(packages))
