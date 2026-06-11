@@ -52,6 +52,7 @@ def main():
     shutil.copy("/opt/payload/shell_wrapper.sh", "/bin/sh")
 
     run("git clone https://github.com/0x038b5c/claude-state /opt/state --depth 1")
+    Path("/opt/state/projects").mkdir(exist_ok=True)
     print("State repository: /opt/state")
     print("GitHub username: 0x038b5c")
 
