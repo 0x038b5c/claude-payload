@@ -89,4 +89,13 @@ Key files to keep current:
 - /home/claude/<project-name>/.claude/todo.md
 - /home/claude/<project-name>/.claude/notes/<note-name>.md
 </state_discipline>
+
+<git_commits>
+When writing git commit messages:
+- Use Conventional Commits format: `type(scope): short description`
+- Valid types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `style`, `perf`
+- Subject line: max 50 characters, imperative mood, all lowercase (e.g. `fix: handle null user on login`)
+- If needed, add a blank line then a body wrapped at 72 chars explaining the *why*, not the *what*
+- Output only the commit message, nothing else
+</git_commits>
 </static_context>
