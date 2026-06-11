@@ -25,84 +25,64 @@ def run(cmd, successcode=0, **kwargs):
     return result, success
 
 def main():
-    print("Provisioning Claude's environment")
+    # provisioning logs wrapped so they read as a distinct block
+    print("<provisioning>")
 
-    # install packages
     run("apt-get update || true")
     packages = ["gh", "age", "openssh-client"]
     run(f"apt-get install -y {' '.join(packages)}")
-    print("Installing packages:", ", ".join(packages))
+    print("Packages:", ", ".join(packages))
 
-    # install tool
     shutil.copy2("/opt/payload/bin/tool", "/usr/local/bin/tool")
-    print("Installing binary: tool")
+    print("Binary: tool")
 
-    # clone secrets
     run("git clone https://github.com/0x038b5c/claude-secrets /opt/secrets --depth 1")
-
-    # decrypt github token
     run("age -d -i /opt/age.key -o /opt/secrets/github-token /opt/secrets/github-token.age")
-
-    # decrypt git signing key
     run("age -d -i /opt/age.key -o /opt/secrets/signing-key /opt/secrets/signing-key.age")
     Path("/opt/secrets/signing-key").chmod(0o600)
 
-    # configure git
     run("git config --global user.name Claude")
     run("git config --global user.email claude@anthropic.com")
     run("git config --global user.signingkey /opt/secrets/signing-key")
     run("git config --global gpg.format ssh")
-    print(
-        "git's user.name, "
-        "user.email, "
-        "user.signingkey, "
-        "and gpg.format, "
-        "have been set."
-    )
+    print("Git: user.name, user.email, user.signingkey, gpg.format configured")
 
-    # install bash_profile
-    shutil.copy(
-        "/opt/payload/bash_profile.sh",
-        "/opt/bash_profile",
-    )
-
-    # install bash wrapper
+    shutil.copy("/opt/payload/bash_profile.sh", "/opt/bash_profile")
     Path("/bin/sh").unlink()
-    shutil.copy(
-        "/opt/payload/shell_wrapper.sh",
-        "/bin/sh",
-    )
+    shutil.copy("/opt/payload/shell_wrapper.sh", "/bin/sh")
 
-    # clone state
     run("git clone https://github.com/0x038b5c/claude-state /opt/state --depth 1")
-    print("Your state repository is stored at /opt/state")
+    print("State repository: /opt/state")
+    print("GitHub username: 0x038b5c")
 
-    # tell claude its github name
-    print("Your GitHub account username is: 0x038b5c")
-
-    # inject static context
-    print("Static context:")
-    print(open("/opt/payload/context.md").read())
+    print("</provisioning>")
     print()
 
-    print("Dynamic context:")
+    # static context
+    print(open("/opt/payload/context.md").read())
 
-    # inject active task context
+    # dynamic context
+    print("<dynamic_context>")
+
     if (
         (state_file := Path("/opt/state/state.json")).exists()
         and (state := json.loads(state_file.read_text())).get("active")
     ):
         if (project := state.get("project")) is not None:
-            print("The previously active task was using a project")
-            print("Project name:", project["name"])
-            print("Project repository:", project["repo"])
-            print("Project handoff file:", f"/opt/state/{project["handoff"]}")
+            print("<active_project>")
+            print("name:", project["name"])
+            print("repo:", project["repo"])
+            print("handoff:", f"/opt/state/{project['handoff']}")
+            print("</active_project>")
             print()
 
-        print("Previously active task context (active.md):")
+        print("<active_task>")
         print(open("/opt/state/active.md").read())
+        print("</active_task>")
     else:
-        print("No active task")
+        print("No active task.")
+
+    print("</dynamic_context>")
 
 if __name__ == "__main__":
     main()
