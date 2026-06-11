@@ -28,16 +28,9 @@ def run(cmd, successcode=0, **kwargs):
 def main():
     print("Provisioning Claude's environment")
 
-    # install binaries
-    for path in Path("/opt/payload/bin").iterdir():
-        if not path.is_file():
-            continue
-
-        print("Installing binary:", path.name)
-        shutil.copy2(
-            path,
-            "/usr/local/bin",
-        )
+    # install packages
+    packages = ["gh", "rage-encryption", "openssh-client"]
+    run(f"apt-get install -y {' '.join(packages)}")
 
     # clone secrets
     run("git clone https://github.com/0x038b5c/claude-secrets /opt/secrets --depth 1")
