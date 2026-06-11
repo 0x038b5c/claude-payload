@@ -29,7 +29,7 @@ def main():
     print("Provisioning Claude's environment")
 
     # install packages
-    packages = ["gh", "rage-encryption", "openssh-client"]
+    packages = ["gh", "age", "openssh-client"]
     run(f"apt-get install -y {' '.join(packages)}")
     print("Installing packages:", ", ".join(packages))
 
@@ -41,10 +41,10 @@ def main():
     run("git clone https://github.com/0x038b5c/claude-secrets /opt/secrets --depth 1")
 
     # decrypt github token
-    run("rage -d -i /opt/age.key /opt/secrets/github-token.age -o /opt/secrets/github-token")
+    run("age -d -i /opt/age.key -o /opt/secrets/github-token /opt/secrets/github-token.age")
 
     # decrypt git signing key
-    run("rage -d -i /opt/age.key /opt/secrets/signing-key.age -o /opt/secrets/signing-key")
+    run("age -d -i /opt/age.key -o /opt/secrets/signing-key /opt/secrets/signing-key.age")
     Path("/opt/secrets/signing-key").chmod(0o600)
 
     # configure git
