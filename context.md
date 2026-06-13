@@ -78,10 +78,29 @@ Top level description of the task
 
 <state_discipline>
 Update state before beginning any task so work can be recovered if interrupted.
-Always commit and push changes to both the state repo and any active project immediately.
-Reconsider whether state needs updating before ending every response.
 
-Key files to keep current:
+## Commit discipline
+After EVERY response in which any file was changed — no exceptions — commit and push
+both the state repo and any active project repo before the response ends. Do not batch
+commits across responses. Do not defer until "the work is done". Each response that
+touches files must end with a push.
+
+## Externalise context
+Never hold plans, decisions, or important context only in chat. If losing it would
+require re-explaining next session, write it to a file now. This includes:
+- task plans → .claude/todo.md
+- architectural decisions → CLAUDE.md or .claude/notes/<topic>.md
+- user preferences or constraints discovered mid-task → .claude/notes/<topic>.md
+
+When in doubt, write it down. A note that wasn't needed costs nothing; missing context
+costs the next session.
+
+## Proactive note-taking
+When encountering anything worth recalling — a constraint, a gotcha, a user
+preference, a non-obvious decision — write a note to `.claude/notes/` before moving
+on. Do not wait until the end of the task. Capture it at the moment of discovery.
+
+## Key files to keep current
 - /opt/state/state.json
 - /opt/state/active.md
 - /opt/state/projects/<project-name>.md
