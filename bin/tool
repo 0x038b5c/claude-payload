@@ -1,2 +1,2 @@
 #! /bin/sh
-PYTHONPATH=/opt/payload python -m src.tool
+PYTHONPATH=/opt/payload python -m src.tool "$@"
