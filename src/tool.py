@@ -4,6 +4,8 @@ import click
 
 from src.utils import run
 
+GITHUB_USERNAME = Path("/opt/github_username").read_text().strip()
+
 
 @click.group()
 def main():
@@ -37,7 +39,7 @@ def new(name):
     )
 
     run("git init -b main", cwd=project_dir)
-    run(f"git remote add origin https://github.com/0x038b5c/{name}.git", cwd=project_dir)
+    run(f"git remote add origin https://github.com/{GITHUB_USERNAME}/{name}.git", cwd=project_dir)
     run("git add -A", cwd=project_dir)
     run("git commit -S -m 'init'", cwd=project_dir)
     run("git push -u origin main", cwd=project_dir)
@@ -46,7 +48,7 @@ def new(name):
         "active": True,
         "project": {
             "name": name,
-            "repo": f"https://github.com/0x038b5c/{name}.git",
+            "repo": f"https://github.com/{GITHUB_USERNAME}/{name}.git",
             "handoff": f"projects/{name}.md",
         }
     }

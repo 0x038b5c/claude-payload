@@ -2,10 +2,13 @@ from pathlib import Path
 
 import json
 import shutil
+import sys
 
 from src.utils import run
 
 def main():
+    github_username = sys.argv[1]
+
     # provisioning logs wrapped so they read as a distinct block
     print("<provisioning>")
 
@@ -17,7 +20,7 @@ def main():
     shutil.copy2("/opt/payload/bin/tool", "/usr/local/bin/tool")
     print("Binary: tool")
 
-    run("git clone https://github.com/0x038b5c/claude-secrets /opt/secrets --depth 1")
+    run(f"git clone https://github.com/{github_username}/claude-secrets /opt/secrets --depth 1")
     run("age -d -i /opt/age.key -o /opt/secrets/github-token /opt/secrets/github-token.age")
     run("age -d -i /opt/age.key -o /opt/secrets/signing-key /opt/secrets/signing-key.age")
     Path("/opt/secrets/signing-key").chmod(0o600)
@@ -32,10 +35,13 @@ def main():
     Path("/bin/sh").unlink()
     shutil.copy("/opt/payload/shell_wrapper.sh", "/bin/sh")
 
-    run("git clone https://github.com/0x038b5c/claude-state /opt/state --depth 1")
+    # Write github_username so tool.py can read it without re-parsing argv
+    Path("/opt/github_username").write_text(github_username)
+
+    run(f"git clone https://github.com/{github_username}/claude-state /opt/state --depth 1")
     Path("/opt/state/projects").mkdir(exist_ok=True)
     print("State repository: /opt/state")
-    print("GitHub username: 0x038b5c")
+    print(f"GitHub username: {github_username}")
 
     print("</provisioning>")
     print()
