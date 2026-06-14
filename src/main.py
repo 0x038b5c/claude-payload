@@ -2,13 +2,15 @@ from pathlib import Path
 
 import json
 import shutil
-import sys
+
+import click
 
 from src.utils import run
 
-def main():
-    github_username = sys.argv[1]
 
+@click.command()
+@click.argument("github_username")
+def main(github_username: str):
     # provisioning logs wrapped so they read as a distinct block
     print("<provisioning>")
 
@@ -71,6 +73,7 @@ def main():
         print("No active task.")
 
     print("</dynamic_context>")
+
 
 if __name__ == "__main__":
     main()
