@@ -41,9 +41,6 @@ def new(name):
 
     print(f"Project created at: {project_dir}")
 
-if __name__ == "__main__":
-    main()
-
 @main.group()
 def session():
     ...
@@ -56,3 +53,7 @@ def list():
         f"Description: {session["description"]}"
         for session_file in Path("/opt/state/sessions").iterdir()
     ]))
+
+
+if __name__ == "__main__":
+    main()
