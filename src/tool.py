@@ -57,3 +57,38 @@ def list():
 
 if __name__ == "__main__":
     main()
+
+
+@main.group()
+def state():
+    ...
+
+@state.command("atomic-write")
+@click.option("--repo", required=True, type=click.Path(exists=True), help="Absolute path to the repository")
+@click.option("--file", "file_path", required=True, help="Path to the file, relative to repo root")
+@click.option("--message", "-m", required=True, help="Commit message")
+@click.argument("content", default="-", type=click.File("r"))
+def atomic_write(repo, file_path, message, content):
+    repo_dir = Path(repo)
+    target = repo_dir / file_path
+
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content.read())
+
+    _, add_ok = run(f"git add {file_path}", cwd=repo_dir)
+    if not add_ok:
+        target.unlink(missing_ok=True)
+        print("ERROR: git add failed, file removed")
+        return
+
+    _, commit_ok = run(f"git commit -S -m '{message}'", cwd=repo_dir)
+    if not commit_ok:
+        print("ERROR: git commit failed")
+        return
+
+    _, push_ok = run("git push", cwd=repo_dir)
+    if not push_ok:
+        print("ERROR: git push failed — commit exists locally but was not pushed")
+        return
+
+    print(f"OK: {file_path} written, committed, and pushed")
