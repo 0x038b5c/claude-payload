@@ -18,14 +18,15 @@ def project():
 
 @project.command()
 @click.argument("name")
-def new(name):
-    project_dir = Path(f"/home/claude/{name}")
+@click.option("--dir", default=None)
+def new(name, project_dir):
+    project_dir = Path(project_dir) if project_dir else Path(f"/home/claude/{name}")
 
     _, success = run(f"gh repo create {name} --public")
     if not success:
         return
 
-    project_dir.mkdir()
+    project_dir.mkdir(parents=True, exist_ok=True)
 
     run("git init -b master", cwd=project_dir)
     run(f"git remote add origin https://github.com/{GITHUB_USERNAME}/{name}.git", cwd=project_dir)
@@ -67,6 +68,10 @@ def state():
 def atomic_write(repo, file_path, message, content):
     repo_dir = Path(repo)
     target = repo_dir / file_path
+
+    if not repo_dir.exists():
+        print("Project doesn't exist, creating")
+        new(repo_dir.name, repo_dir) # new project
 
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content.read())
