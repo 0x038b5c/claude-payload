@@ -55,15 +55,11 @@ def list():
     ]))
 
 
-if __name__ == "__main__":
-    main()
-
-
 @main.group()
 def state():
     ...
 
-@state.command("atomic-write")
+@state.command()
 @click.option("--repo", required=True, type=click.Path(exists=True), help="Absolute path to the repository")
 @click.option("--file", "file_path", required=True, help="Path to the file, relative to repo root")
 @click.option("--message", "-m", required=True, help="Commit message")
@@ -92,3 +88,7 @@ def atomic_write(repo, file_path, message, content):
         return
 
     print(f"OK: {file_path} written, committed, and pushed")
+
+
+if __name__ == "__main__":
+    main()
