@@ -117,7 +117,7 @@ def main():
 
     # ── Python Packages ─────────────────────────────────────────────────────
     python_packages = ["python-frontmatter"]
-    run(f"python install {' '.join(python_packages)} --break-system-packages")
+    run(f"pip install {' '.join(python_packages)} --break-system-packages")
     print("Python Packages:", ", ".join(python_packages))
 
     # ── Tool binary ─────────────────────────────────────────────────────────
