@@ -171,26 +171,17 @@ def main():
     print(open("/opt/payload/context.md").read())
 
     # ── Dynamic context ───────────────────────────────────────────────────────
+    import frontmatter
+
     print("<dynamic_context>")
 
-    state_file = Path("/opt/state/state.json")
-    if (
-        state_file.exists()
-        and (state := json.loads(state_file.read_text())).get("active")
-    ):
-        if (project := state.get("project")) is not None:
-            print("<active_project>")
-            print("name:", project["name"])
-            print("repo:", project["repo"])
-            print("handoff:", f"/opt/state/{project['handoff']}")
-            print("</active_project>")
-            print()
-
-        print("<active_task>")
-        print(open("/opt/state/active.md").read())
-        print("</active_task>")
-    else:
-        print("No active task.")
+    print("<active_sessions>")
+    "\n\n".join([
+        f"Session: {(abs_session_path := str(session_path.absolute()))}\n"
+        f"Description: {frontmatter.load(abs_session_path)["description"]}"
+        for session_path in Path("/opt/state/sessions").iterdir()
+    ])
+    print("</active_sessions>")
 
     print("</dynamic_context>")
 
