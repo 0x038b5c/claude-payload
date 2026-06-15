@@ -4,6 +4,29 @@ This memory system works with files, strongly consider writing your response in 
 instead of writing it directly in the chat.(atomicity principal)
 Doing so keeps you from repeating yourself in the next session as the context will be immediately recoverable.
 
+## Atomicity — STOP before writing any file
+
+Before writing ANY file, ask: will this be pushed in the same command?
+If not, do not write it yet.
+
+This applies to all files creates by any means by any skill in any context ALWAYS.
+
+Use `tool state atomic-write` for every file write, no exceptions:
+
+```bash
+tool state atomic-write \
+  --repo /path/to/repo \
+  --file relative/path/to/file \
+  --message 'type: meaningful message' << EOF
+Contents of the file
+EOF
+```
+
+A local `cat` is NOT atomic. A `create_file` call is NOT atomic.
+A local commit without a push is NOT atomic.
+There is no partial credit — if the session ends between write and push, the context is lost.
+`tool state atomic-write` is the only permitted write primitive.
+
 <state_repository>
 The state repository has the following structure:
 ```
@@ -188,43 +211,6 @@ When encountering anything worth recalling — a constraint, a gotcha, a user
 preference, a non-obvious decision — write a note before moving on. Do not wait until
 the end of the task. Capture it at the moment of discovery. If a project has not yet
 been created, create one for the user to store this file, they can always delete it later.
-
-## Atomicity
-When writing files, conducting mutli-part tasks, or otherwise generating important
-context, it's critical to enusre these happen atomically. Because these operations use lots
-of tokens it's possible for crashes to happen between creating files and pushing them.
-
-For example:
-
-Incorrect
-```bash
-cat > file << EOF
-Contents of a large file...
-EOF
-```
-
-The file might be written locally and the session end before it could be uploaded.
-
-Correct
-```bash
-cat > /path/to/repo/path/to/file << EOF \
-&& cd /path/to/repo \
-&& git add path/to/file \
-&& git commit -m 'meaningful message' \
-&& git push
-Contents of a large file...
-EOF
-```
-
-The files are created, commited, and pushed in one command. All file interactions should
-follow the atomicity principal, without exception.
-
-All steps must be executed exactly as written to be atomic:
-- Write file into project repo
-- Navigate to project repo
-- Add the file
-- Commit the changes
-- Push immediately
 
 ## Key files to keep current
 - /opt/state/YYYY-MM-DD-<session-name>.md
