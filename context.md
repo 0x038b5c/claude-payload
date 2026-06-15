@@ -5,31 +5,94 @@ You are enabled with a memory system using the state repository.
 The state repository has the following structure:
 ```
 claude-state/
-    active.md   - the active task context
-    state.json  - the current execution state
     projects/   - handoff context for active projects
         <project-name>.md
+    sessions/   - handoff contexts for previous sessions
+        YYYY-MM-DD-Unique-session-name.md
 ```
-
-state.json schema:
-```json
-{
-    "active": true,
-    "project": {
-        "name": "project-name",
-        "repo": "https://github.com/username/project-name.git",
-        "handoff": "projects/project-name.md"
-    }
-}
-```
-
-`"project"` may be `null` when the active task has no associated repository. In that case, active.md holds the task description.
 </state_repository>
 
 <resuming_work>
 When the user asks to continue, or references something that only makes sense in the context of prior work, assume they mean the active task.
 That said, not every prompt will relate to the active task — use judgment.
 </resuming_work>
+
+<sessions>
+Sessions correspond to a single context carried through multiple conversations and accounts.
+
+When beginning a new conversation, after loading:
+- Decide if the user's prompt is relevent to the previous session
+- If the user's prompt is relevent respond accordingly
+- If the user's prompt is irrelevant to the previous session, check if it is relevent to any other session
+  - Use `tool session list` to view sessions
+- If the user's prompt is relevent to a previous active session, continue it
+- If the user's prompt is relevent to a previous inactive session, ask before continuing it
+- If the user's prompt is not relevent to any previous sessions, immediately create notes for this session (atomicity principal)
+
+Schema for session notes:
+```md
+---
+active: true/false
+description: >
+  Detailed description of the session
+---
+# Session Notes
+
+## Environment
+- Repository/Project:
+- Branch:
+- Working Directory:
+- Stack/Tools:
+
+## External Resources
+
+### [Resource Name]
+- Path:
+- Purpose:
+
+## Stated Goal
+What the user wants to accomplish, in their words where possible.
+
+## Objective
+
+### [Finding]
+- Observation:
+- Source:
+- Verified:
+
+## Assessment
+Reasoning about gathered information — constraints, implications, risks, approach
+rationale — before committing to a plan.
+
+## Plan
+
+### Decisions Made
+
+#### [Decision]
+- Rationale:
+
+### Completed
+-
+
+### What I Was Doing
+The active thread at the time of last update.
+
+### In Flight
+Tasks that have been started but are not confirmed complete — verify state before
+proceeding.
+
+-
+
+### Next
+-
+
+### Open Questions / Blockers
+-
+```
+
+`tool` uses the active and description attributes in the frontmatter when listing sessions.
+Keep descriptions updated.
+</sessions>
 
 <projects>
 Projects correspond to a GitHub repository of the same name. Git and GitHub (gh) authentication has been configured.
@@ -48,33 +111,46 @@ tool project new <name>
 git clone https://github.com/username/project-name.git /home/claude/project-name --depth 1
 ```
 
-Projects should contain all context needed to resume work:
+Projects should contain all context needed to resume work.
+
+If not using a planning skill (e.g. superpowers/planning-with-files), a suggested structure is:
 ```
 project-name/
     CLAUDE.md            - project structure, important notes
     .claude/
         todo.md          - task WAL
-        notes/           - static notes
+        notes/           - project notes
             note-name.md
 ```
-</projects>
 
-<file_schemas>
-Schema for active.md and todo.md:
+With the todo.md formatted like so:
 ```md
-## What I was doing
-Top level description of the task
+## Decisions Made
 
-## What's done
-- <description of completed step>
+### [Decision]
+- Rationale:
 
-## What's in flight (may be incomplete)
-- <description of active step>
+## Completed
+-
 
-## What's next
-- <description of next step>
+## What I Was Doing
+The active thread at the time of last update.
+
+## In Flight
+Tasks that have been started but are not confirmed complete — verify state before
+proceeding.
+
+-
+
+### Next
+-
+
+### Open Questions / Blockers
+-
 ```
-</file_schemas>
+
+Otherwise, utilize the layouts suggested by your planning tool.
+</projects>
 
 <state_discipline>
 Update state before beginning any task so work can be recovered if interrupted.
@@ -100,10 +176,51 @@ When encountering anything worth recalling — a constraint, a gotcha, a user
 preference, a non-obvious decision — write a note to `.claude/notes/` before moving
 on. Do not wait until the end of the task. Capture it at the moment of discovery.
 
+## Atomicity
+When writing files, conducting mutli-part tasks, or otherwise generating important
+context, it's critical to enusre these happen atomically. Because these operations use lots
+of tokens it's possible for crashes to happen between creating files and pushing them.
+
+For example:
+
+Incorrect
+```bash
+cat > file << EOF
+Contents of a large file...
+EOF
+```
+
+The file might be written locally and the session end before it could be uploaded.
+
+Correct
+```bash
+cat > /path/to/repo/path/to/file << EOF \
+&& cd /path/to/repo \
+&& git add path/to/file \
+&& git commit -m 'meaningful message' \
+&& git push
+Contents of a large file...
+EOF
+```
+
+The files are created, commited, and pushed in one command. All file interactions should
+follow the atomicity principal, without exception.
+
+All steps must be executed exactly as written to be atomic:
+- Write file into repo
+- Navigate to repo
+- Add the file
+- Commit the changes
+- Push immediately
+
 ## Key files to keep current
-- /opt/state/state.json
-- /opt/state/active.md
+- /opt/state/YYYY-MM-DD-<session-name>.md
 - /opt/state/projects/<project-name>.md
+
+If using a planning skill:
+Keep the relevent planning files updated. Remember the atomicity principal.
+
+Otherwise, maintain the default planning files:
 - /home/claude/<project-name>/CLAUDE.md
 - /home/claude/<project-name>/.claude/todo.md
 - /home/claude/<project-name>/.claude/notes/<note-name>.md

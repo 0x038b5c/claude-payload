@@ -115,6 +115,11 @@ def main():
     run(f"apt-get install -y {' '.join(packages)}")
     print("Packages:", ", ".join(packages))
 
+    # ── Python Packages ─────────────────────────────────────────────────────
+    python_packages = ["python-frontmatter"]
+    run(f"python install {' '.join(python_packages)} --break-system-packages")
+    print("Python Packages:", ", ".join(python_packages))
+
     # ── Tool binary ─────────────────────────────────────────────────────────
     shutil.copy2("/opt/payload/bin/tool", "/usr/local/bin/tool")
     print("Binary: tool")

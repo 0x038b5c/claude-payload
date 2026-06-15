@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import click
+import frontmatter
 
 from src.utils import run
 
@@ -18,8 +19,6 @@ def project():
 @project.command()
 @click.argument("name")
 def new(name):
-    import json
-
     project_dir = Path(f"/home/claude/{name}")
 
     _, success = run(f"gh repo create {name} --public")
@@ -27,39 +26,12 @@ def new(name):
         return
 
     project_dir.mkdir()
-    (project_dir / ".claude").mkdir()
-    (project_dir / ".claude" / "notes").mkdir()
 
-    (project_dir / "CLAUDE.md").write_text(f"# {name}\n\n## Structure\n\n## Notes\n")
-    (project_dir / ".claude" / "todo.md").write_text(
-        "## What I was doing\n\n"
-        "## What's done\n\n"
-        "## What's in flight\n\n"
-        "## What's next\n"
-    )
-
-    run("git init -b main", cwd=project_dir)
+    run("git init -b master", cwd=project_dir)
     run(f"git remote add origin https://github.com/{GITHUB_USERNAME}/{name}.git", cwd=project_dir)
-    run("git add -A", cwd=project_dir)
-    run("git commit -S -m 'init'", cwd=project_dir)
-    run("git push -u origin main", cwd=project_dir)
 
-    state = {
-        "active": True,
-        "project": {
-            "name": name,
-            "repo": f"https://github.com/{GITHUB_USERNAME}/{name}.git",
-            "handoff": f"projects/{name}.md",
-        }
-    }
     state_dir = Path("/opt/state")
-    (state_dir / "state.json").write_text(json.dumps(state, indent=4))
-    (state_dir / "active.md").write_text(
-        f"## What I was doing\nInitialized project {name}\n\n"
-        "## What's done\n- Created repository and scaffolded project structure\n\n"
-        "## What's in flight\n\n"
-        "## What's next\n"
-    )
+
     (state_dir / "projects" / f"{name}.md").write_text(
         f"## {name}\n\nProject initialized.\n"
     )
@@ -71,3 +43,16 @@ def new(name):
 
 if __name__ == "__main__":
     main()
+
+@main.group()
+def session():
+    ...
+
+@session.command()
+def list():
+    print("\n\n".join([
+        f"Session: {session_file.absolute()}\n"
+        f"Active: {(session := frontmatter.load(str(session_file.absolute())))["active"]}\n"
+        f"Description: {session["description"]}"
+        for session_file in Path("/opt/state/sessions").iterdir()
+    ]))
