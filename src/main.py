@@ -176,11 +176,12 @@ def main():
     print("<dynamic_context>")
 
     print("<active_sessions>")
-    "\n\n".join([
+    print("\n\n".join([
         f"Session: {(abs_session_path := str(session_path.absolute()))}\n"
-        f"Description: {frontmatter.load(abs_session_path)["description"]}"
+        f"Description: {frontmatter.load(abs_session_path)['description']}"
         for session_path in Path("/opt/state/sessions").iterdir()
-    ])
+        if frontmatter.load(session_path).get("active", False)
+    ]))
     print("</active_sessions>")
 
     print("</dynamic_context>")
