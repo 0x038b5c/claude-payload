@@ -16,15 +16,11 @@ def main():
 def project():
     ...
 
-@project.command()
-@click.argument("name")
-@click.option("--dir", default=None)
-def new(name, project_dir):
-    project_dir = Path(project_dir) if project_dir else Path(f"/home/claude/{name}")
 
+def _create_project(name, project_dir):
     _, success = run(f"gh repo create {name} --public")
     if not success:
-        return
+        return False
 
     project_dir.mkdir(parents=True, exist_ok=True)
 
@@ -41,6 +37,16 @@ def new(name, project_dir):
     run("git push", cwd=state_dir)
 
     print(f"Project created at: {project_dir}")
+    return True
+
+
+@project.command()
+@click.argument("name")
+@click.option("--dir", "project_dir", default=None)
+def new(name, project_dir):
+    project_dir = Path(project_dir) if project_dir else Path(f"/home/claude/{name}")
+    _create_project(name, project_dir)
+
 
 @main.group()
 def session():
@@ -50,8 +56,8 @@ def session():
 def list():
     print("\n\n".join([
         f"Session: {session_file.absolute()}\n"
-        f"Active: {(session := frontmatter.load(str(session_file.absolute())))["active"]}\n"
-        f"Description: {session["description"]}"
+        f"Active: {(session := frontmatter.load(str(session_file.absolute())))[\"active\"]}\n"
+        f"Description: {session[\"description\"]}"
         for session_file in Path("/opt/state/sessions").iterdir()
     ]))
 
@@ -71,7 +77,10 @@ def atomic_write(repo, file_path, message, content):
 
     if not repo_dir.exists():
         print("Project doesn't exist, creating")
-        new(repo_dir.name, repo_dir) # new project
+        ok = _create_project(repo_dir.name, repo_dir)
+        if not ok:
+            print("ERROR: project creation failed, aborting")
+            return
 
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content.read())
