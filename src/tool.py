@@ -68,10 +68,11 @@ def state():
 
 @state.command()
 @click.option("--repo", required=True, type=click.Path(), help="Absolute path to the repository")
+@click.option("--branch", default="master", help="The branch to push upstream")
 @click.option("--file", "file_path", required=True, help="Path to the file, relative to repo root")
 @click.option("--message", "-m", required=True, help="Commit message")
 @click.argument("content", default="-", type=click.File("r"))
-def atomic_write(repo, file_path, message, content):
+def atomic_write(repo, branch, file_path, message, content):
     repo_dir = Path(repo)
     target = repo_dir / file_path
 
@@ -96,7 +97,7 @@ def atomic_write(repo, file_path, message, content):
         print("ERROR: git commit failed")
         return
 
-    _, push_ok = run("git push", cwd=repo_dir)
+    _, push_ok = run(f"git push -u origin {branch}", cwd=repo_dir)
     if not push_ok:
         print("ERROR: git push failed — commit exists locally but was not pushed")
         return
