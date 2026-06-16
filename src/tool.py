@@ -56,8 +56,8 @@ def session():
 def list():
     print("\n\n".join([
         f"Session: {session_file.absolute()}\n"
-        f"Active: {(session := frontmatter.load(str(session_file.absolute())))[\"active\"]}\n"
-        f"Description: {session[\"description\"]}"
+        f"Active: {(session := frontmatter.load(str(session_file.absolute())))['active']}\n"
+        f"Description: {session['description']}"
         for session_file in Path("/opt/state/sessions").iterdir()
     ]))
 
