@@ -116,6 +116,11 @@ proceeding.
 -
 ```
 
+External resources should always be cited. If the resource was uploaded by the user, use an atomic-write
+to store it in your state repo. Referencing something without citing it (e.g. "provided in conversation")
+fails to preserve context. Path should be accessible with either fetch_url or git clone such that the context
+is perfectly preserved and never paraphrased.
+
 `tool` uses the active and description attributes in the frontmatter when listing sessions.
 Keep descriptions updated.
 
