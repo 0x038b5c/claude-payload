@@ -80,7 +80,7 @@ def _resolve_mode_b(github_username: str) -> dict:
 def main():
     print("<provisioning>")
 
-    # ── Detect mode and resolve settings ───────────────────────────────────
+    # Detect mode and resolve settings
     if UUID_FILE.exists():
         uuid = UUID_FILE.read_text().strip()
         print(f"Mode: A (uuid={uuid})")
@@ -107,7 +107,7 @@ def main():
 
     print(f"GitHub username: {github_username}")
 
-    # ── Packages ────────────────────────────────────────────────────────────
+    # Packages
     run("apt-get update || true")
     packages = ["gh", "age", "openssh-client"]
     if signing_enabled and git_signing_format == "gpg":
@@ -115,16 +115,18 @@ def main():
     run(f"apt-get install -y {' '.join(packages)}")
     print("Packages:", ", ".join(packages))
 
-    # ── Python Packages ─────────────────────────────────────────────────────
+    # Python Packages
     python_packages = ["python-frontmatter"]
     run(f"pip install {' '.join(python_packages)} --break-system-packages")
     print("Python Packages:", ", ".join(python_packages))
 
-    # ── Tool binary ─────────────────────────────────────────────────────────
-    shutil.copy2("/opt/payload/bin/tool", "/usr/local/bin/tool")
-    print("Binary: tool")
+    # Custom binaries
+    for file_path in Path("/opt/payload/bin").iterdir():
+        name = file_path.name
+        shutil.copy2(file_path, f"/usr/local/bin/{name}")
+        print(f"Binary: {name}")
 
-    # ── Decrypt secrets ─────────────────────────────────────────────────────
+    # Decrypt secrets
     run(f"git clone https://github.com/{secrets_repo} {SECRETS_DIR} --depth 1")
 
     token_age  = SECRETS_DIR / github_token_secret
@@ -139,7 +141,7 @@ def main():
         signing_out.chmod(0o600)
         print(f"Decrypted: {signing_key_secret} → signing-key")
 
-    # ── Git config ──────────────────────────────────────────────────────────
+    # Git config
     run(f"git config --global user.name \"{git_author_name}\"")
     run(f"git config --global user.email \"{git_author_email}\"")
     print(f"Git author: {git_author_name} <{git_author_email}>")
@@ -151,15 +153,15 @@ def main():
         run("git config --global commit.gpgsign true")
         print(f"Git signing: {git_signing_format}, key={signing_key_path}")
 
-    # ── Write github_username for tool.py ───────────────────────────────────
+    # Write github_username for tool.py
     Path("/opt/github_username").write_text(github_username)
 
-    # ── Shell wrappers ───────────────────────────────────────────────────────
+    # Shell wrappers
     shutil.copy("/opt/payload/bash_profile.sh", "/opt/bash_profile")
     Path("/bin/sh").unlink()
     shutil.copy("/opt/payload/shell_wrapper.sh", "/bin/sh")
 
-    # ── Clone state ─────────────────────────────────────────────────────────
+    # Clone state
     run(f"git clone https://github.com/{state_repo} /opt/state --depth 1")
     Path("/opt/state/projects").mkdir(exist_ok=True)
     print("State repository: /opt/state")
@@ -167,10 +169,10 @@ def main():
     print("</provisioning>")
     print()
 
-    # ── Static context ───────────────────────────────────────────────────────
+    # Static context
     print(open("/opt/payload/context.md").read())
 
-    # ── Dynamic context ───────────────────────────────────────────────────────
+    # Dynamic context
     import frontmatter
 
     print("<dynamic_context>")

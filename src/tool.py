@@ -68,7 +68,7 @@ def state():
 
 @state.command()
 @click.option("--repo", required=True, type=click.Path(), help="Absolute path to the repository")
-@click.option("--branch", default="master", help="The branch to push upstream")
+@click.option("--branch", default="master", help="The branch to push upstream (default=master)")
 @click.option("--file", "file_path", required=True, help="Path to the file, relative to repo root")
 @click.option("--message", "-m", required=True, help="Commit message")
 @click.argument("content", default="-", type=click.File("r"))
