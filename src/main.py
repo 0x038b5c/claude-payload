@@ -1,12 +1,3 @@
-"""Claude payload — provisioning entrypoint.
-
-The loader writes exactly one of:
-  /opt/account-uuid      (Mode A: fleet/config-driven)
-  /opt/github-username   (Mode B: simple/single-account)
-
-This script detects which exists, resolves all settings from config (Mode A)
-or derives them from the username (Mode B), then provisions the environment.
-"""
 from pathlib import Path
 import shutil
 import tomllib
@@ -19,11 +10,11 @@ AGE_KEY       = Path("/opt/age.key")
 SECRETS_DIR   = Path("/opt/secrets")
 
 def _resolve_mode_a(uuid: str) -> dict:
-    """Read /opt/claude-config/config.toml and resolve settings for this UUID."""
+    """Read /opt/claude/config.toml and resolve settings for this UUID."""
     config_path = Path("/opt/config/config.toml")
     if not config_path.exists():
         raise RuntimeError(
-            f"Mode A: /opt/account-uuid exists but {config_path} is missing. "
+            f"Mode A: UUID is set but {config_path} is missing. "
             "Did the loader fail to clone claude-config?"
         )
     with open(config_path, "rb") as f:
@@ -178,7 +169,7 @@ def main():
         f"Session: {(abs_session_path := str(session_path.absolute()))}\n"
         f"Description: {frontmatter.load(abs_session_path)['description']}"
         for session_path in Path("/opt/state/sessions").iterdir()
-        if frontmatter.load(session_path).get("active", False)
+        if frontmatter.load(str(session_path.absolute())).get("active", False)
     ]))
     print("</active_sessions>")
 
