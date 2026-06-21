@@ -1,4 +1,5 @@
 import subprocess
+import tomllib
 
 
 def run(cmd, successcode=0, **kwargs):
@@ -20,3 +21,16 @@ def run(cmd, successcode=0, **kwargs):
         print(result.stdout)
 
     return result, success
+
+def get_settings():
+    with open("/mnt/skills/user/settings/SKILL.md") as f:
+        lines = f.readlines()
+
+    # remove frontmatter
+    lines.reverse()
+    lines.pop()
+    while lines.pop().strip() != "---":
+        pass
+    lines.reverse()
+
+    return tomllib.loads("".join(lines))

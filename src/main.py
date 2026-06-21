@@ -8,24 +8,19 @@ This script detects which exists, resolves all settings from config (Mode A)
 or derives them from the username (Mode B), then provisions the environment.
 """
 from pathlib import Path
-import json
 import shutil
 import tomllib
 
 import click
 
-from src.utils import run
+from src.utils import run, get_settings
 
-UUID_FILE     = Path("/opt/account-uuid")
-USERNAME_FILE = Path("/opt/github-username")
-CONFIG_DIR    = Path("/opt/claude-config")
 AGE_KEY       = Path("/opt/age.key")
 SECRETS_DIR   = Path("/opt/secrets")
 
-
 def _resolve_mode_a(uuid: str) -> dict:
     """Read /opt/claude-config/config.toml and resolve settings for this UUID."""
-    config_path = CONFIG_DIR / "config.toml"
+    config_path = Path("/opt/config/config.toml")
     if not config_path.exists():
         raise RuntimeError(
             f"Mode A: /opt/account-uuid exists but {config_path} is missing. "
@@ -37,16 +32,16 @@ def _resolve_mode_a(uuid: str) -> dict:
     g = config.get("global", {})
     acct = config.get("account", {}).get(uuid, {})
 
-    github_username     = acct.get("github_username") or g["github_username"]
-    payload_repo        = acct.get("payload_repo") or g["payload_repo"]
-    secrets_repo        = g["secrets_repo"]
-    state_repo          = g["state_repo"]
-    signing_enabled     = acct.get("signing_enabled") if acct.get("signing_enabled") is not None else g.get("signing_enabled", False)
-    git_signing_format  = g.get("git_signing_format", "gpg")
+    github_username = acct.get("github_username") or g["github_username"]
+    # payload_repo = acct.get("payload_repo") or g["payload_repo"]
+    secrets_repo = g["secrets_repo"]
+    state_repo = g["state_repo"]
+    signing_enabled = acct.get("signing_enabled") if acct.get("signing_enabled") is not None else g.get("signing_enabled", False)
+    git_signing_format = g.get("git_signing_format", "gpg")
     github_token_secret = g.get("github_token_secret", "github-token.age")
-    signing_key_secret  = g.get("signing_key_secret", "signing-key.age")
-    git_author_name     = g.get("git_author_name", "Claude")
-    git_author_email    = g.get("git_author_email", "claude@anthropic.com")
+    signing_key_secret = g.get("signing_key_secret", "signing-key.age")
+    git_author_name = g.get("git_author_name", "Claude")
+    git_author_email = g.get("git_author_email", "claude@anthropic.com")
 
     return {
         "github_username": github_username,
@@ -80,30 +75,31 @@ def _resolve_mode_b(github_username: str) -> dict:
 def main():
     print("<provisioning>")
 
+    settings = get_settings()
+    account_settings = settings.get("account", {})
+
     # Detect mode and resolve settings
-    if UUID_FILE.exists():
-        uuid = UUID_FILE.read_text().strip()
+    if (uuid := account_settings.get("uuid", False)):
         print(f"Mode: A (uuid={uuid})")
-        settings = _resolve_mode_a(uuid)
-    elif USERNAME_FILE.exists():
-        github_username = USERNAME_FILE.read_text().strip()
-        print(f"Mode: B (username={github_username})")
-        settings = _resolve_mode_b(github_username)
+        config = _resolve_mode_a(uuid)
+    elif (username := account_settings.get("username", False)):
+        print(f"Mode: B (username={username})")
+        config = _resolve_mode_b(username)
     else:
         raise RuntimeError(
-            "Neither /opt/account-uuid nor /opt/github-username found. "
+            "Neither account.uuid or account.username found in settings. "
             "The loader did not run correctly."
         )
 
-    github_username     = settings["github_username"]
-    secrets_repo        = settings["secrets_repo"]
-    state_repo          = settings["state_repo"]
-    signing_enabled     = settings["signing_enabled"]
-    git_signing_format  = settings["git_signing_format"]
-    github_token_secret = settings["github_token_secret"]
-    signing_key_secret  = settings["signing_key_secret"]
-    git_author_name     = settings["git_author_name"]
-    git_author_email    = settings["git_author_email"]
+    github_username = config["github_username"]
+    secrets_repo = config["secrets_repo"]
+    state_repo = config["state_repo"]
+    signing_enabled = config["signing_enabled"]
+    git_signing_format = config["git_signing_format"]
+    github_token_secret = config["github_token_secret"]
+    signing_key_secret = config["signing_key_secret"]
+    git_author_name = config["git_author_name"]
+    git_author_email = config["git_author_email"]
 
     print(f"GitHub username: {github_username}")
 
@@ -116,7 +112,7 @@ def main():
     print("Packages:", ", ".join(packages))
 
     # Python Packages
-    python_packages = ["python-frontmatter"]
+    python_packages = ["python-frontmatter", "python-slugify", "pyyaml", "pydantic"]
     run(f"pip install {' '.join(python_packages)} --break-system-packages")
     print("Python Packages:", ", ".join(python_packages))
 
